@@ -1,0 +1,29 @@
+name: First GitHub Action Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download code from GitHub
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Copy files to Azure VM
+        run: |
+          rsync -avz --delete \
+          ./ \
+          azureuser@${{ secrets.VM_HOST }}:/var/www/html/
+
+      - name: Restart Nginx
+        run: |
+          ssh azureuser@${{ secrets.VM_HOST }} "sudo systemctl reload nginx"
